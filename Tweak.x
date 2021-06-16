@@ -32,14 +32,8 @@ static void refreshPrefs() {
 	}
 
 	enabled = [([settings objectForKey:@"enabled"] ?: @(YES)) boolValue];
-	int mode = [([settings objectForKey:@"mode"] ?: 0) floatValue];
-	if (mode == 0) {
-		forceTouch = NO;
-		swipeUp = YES;
-	} else {
-		forceTouch = YES;
-		swipeUp = NO;
-	}
+	forceTouch = [([settings objectForKey:@"forceTouch"] ?: @(YES)) boolValue];
+	swipeUp = [([settings objectForKey:@"swipeUp"] ?: @(NO)) boolValue];
 	int type = [([settings objectForKey:@"type"] ?: 0) floatValue];
 	if (type == 0) {
 		banners = YES;

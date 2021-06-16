@@ -2,14 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>name</key>
+	<string>QuietDown</string>
+	<key>subtitle</key>
+	<string>By Skitty</string>
+	<key>headerColor</key>
+	<string>#3d197f</string>
+	<key>textColor</key>
+	<string>#ffffff</string>
 	<key>items</key>
 	<array>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>headerCellClass</key>
-			<string>QDHeader</string>
-		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
@@ -42,32 +44,6 @@
 			<key>PostNotification</key>
 			<string>xyz.skitty.quietdown.prefschanged</string>
 			<key>key</key>
-			<string>mode</string>
-			<key>label</key>
-			<string>Activation Mode</string>
-			<key>validTitles</key>
-			<array>
-				<string>Swipe Up</string>
-				<string>Force Touch</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<integer>0</integer>
-				<integer>1</integer>
-			</array>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>detail</key>
-			<string>PSListItemsController</string>
-			<key>default</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>xyz.skitty.quietdown</string>
-			<key>PostNotification</key>
-			<string>xyz.skitty.quietdown.prefschanged</string>
-			<key>key</key>
 			<string>type</string>
 			<key>label</key>
 			<string>Notification Type</string>
@@ -87,6 +63,40 @@
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Activation Methods</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>xyz.skitty.quietdown</string>
+			<key>PostNotification</key>
+			<string>xyz.skitty.quietdown.prefschanged</string>
+			<key>key</key>
+			<string>forceTouch</string>
+			<key>label</key>
+			<string>3D Touch Shortcut</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>xyz.skitty.quietdown</string>
+			<key>PostNotification</key>
+			<string>xyz.skitty.quietdown.prefschanged</string>
+			<key>key</key>
+			<string>swipeUp</string>
+			<key>label</key>
+			<string>Swipe Up Gesture</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -95,6 +105,20 @@
 			<string>clearMutes</string>
 			<key>label</key>
 			<string>Clear Muted Apps</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<dict>
+			<key>cellClass</key>
+			<string>SPCreditCell</string>
+			<key>label</key>
+			<string>Skitty</string>
+			<key>twitter</key>
+			<string>Skittyblock</string>
+			<key>subtitle</key>
+			<string>Developer</string>
 		</dict>
 	</array>
 	<key>title</key>
