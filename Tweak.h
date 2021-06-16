@@ -1,5 +1,8 @@
 // QuietDown Headers
 
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
 @interface SBIcon : NSObject
 - (BOOL)isApplicationIcon;
 - (NSString *)applicationBundleID;

@@ -7,69 +7,69 @@
 // Weird hack
 @implementation PSTableCell (QuietDown)
 - (void)layoutSubviews {
-  [super layoutSubviews];
-  if (self.type == 13 && [[self _viewControllerForAncestor] isKindOfClass:NSClassFromString(@"QDRootListController")]) {
-    self.textLabel.textColor = kTintColor;
-  }
+	[super layoutSubviews];
+	if (self.type == 13 && [[self _viewControllerForAncestor] isKindOfClass:NSClassFromString(@"QDRootListController")]) {
+		self.textLabel.textColor = kTintColor;
+	}
 }
 @end
 
 @implementation QDHeader
 - (id)initWithSpecifier:(PSSpecifier *)specifier {
-  self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
+	self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
 
-  if (self) {
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(0, 30, self.frame.size.width, 60)];
-    title.numberOfLines = 1;
-    title.font = [UIFont systemFontOfSize:50];
-    title.text = @"QuietDown";
-    title.textColor = kTintColor;
-    title.textAlignment = NSTextAlignmentCenter;
-    [self addSubview:title];
+	if (self) {
+		UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(0, 30, self.frame.size.width, 60)];
+		title.numberOfLines = 1;
+		title.font = [UIFont systemFontOfSize:50];
+		title.text = @"QuietDown";
+		title.textColor = kTintColor;
+		title.textAlignment = NSTextAlignmentCenter;
+		[self addSubview:title];
 
-    UILabel *subtitle = [[UILabel alloc] initWithFrame:CGRectMake(0, 85, self.frame.size.width, 30)];
-    subtitle.numberOfLines = 1;
-    subtitle.font = [UIFont systemFontOfSize:20];
-    subtitle.text = @"Mute Notifications Better";
-    subtitle.textColor = [UIColor grayColor];
-    subtitle.textAlignment = NSTextAlignmentCenter;
-    [self addSubview:subtitle];
-  }
+		UILabel *subtitle = [[UILabel alloc] initWithFrame:CGRectMake(0, 85, self.frame.size.width, 30)];
+		subtitle.numberOfLines = 1;
+		subtitle.font = [UIFont systemFontOfSize:20];
+		subtitle.text = @"Mute Notifications Better";
+		subtitle.textColor = [UIColor grayColor];
+		subtitle.textAlignment = NSTextAlignmentCenter;
+		[self addSubview:subtitle];
+	}
 
-  return self;
+	return self;
 }
 
 - (CGFloat)preferredHeightForWidth:(CGFloat)arg1 {
-  return 150.0;
+	return 150.0;
 }
 @end
 
 @implementation QDRootListController
 - (NSArray *)specifiers {
-  if (!_specifiers) {
-    _specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
-  }
+	if (!_specifiers) {
+		_specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
+	}
 
-  return _specifiers;
+	return _specifiers;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-  [super viewWillAppear:animated];
+	[super viewWillAppear:animated];
 
-  UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
-  self.view.tintColor = kTintColor;
-  keyWindow.tintColor = kTintColor;
-  [UISwitch appearanceWhenContainedInInstancesOfClasses:@[self.class]].onTintColor = kTintColor;
+	UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
+	self.view.tintColor = kTintColor;
+	keyWindow.tintColor = kTintColor;
+	[UISwitch appearanceWhenContainedInInstancesOfClasses:@[self.class]].onTintColor = kTintColor;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-  [super viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 
-  UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
-  keyWindow.tintColor = nil;
+	UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
+	keyWindow.tintColor = nil;
 }
 
 - (void)clearMutes {
-  [@{@"entries":@[]} writeToFile:@"/var/mobile/Library/QuietDown/config.plist" atomically:YES];
+	[@{@"entries":@[]} writeToFile:@"/var/mobile/Library/QuietDown/config.plist" atomically:YES];
 }
 @end
