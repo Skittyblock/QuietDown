@@ -55,3 +55,18 @@
 @interface SBNCSoundController : NSObject
 -(BOOL)_isDeviceUILocked;
 @end
+
+@interface SBUIAppIconForceTouchControllerDataProvider : NSObject
+- (NSString *)applicationBundleIdentifier;
+@end
+
+@interface SBSApplicationShortcutIcon : NSObject
+@end
+
+@interface SBSApplicationShortcutItem : NSObject
+@property (nonatomic, copy) SBSApplicationShortcutIcon *icon;
+@property (nonatomic, copy) NSString *localizedTitle;
+@property (nonatomic, copy) NSString *localizedSubtitle;
+@property (nonatomic, copy) NSString *bundleIdentifierToLaunch;
+@property (nonatomic, copy) NSString *type;
+@end

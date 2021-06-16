@@ -163,28 +163,63 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 
 %end
 
-// Replace force touch
-%hook SBUIIconForceTouchViewController
+// Force touch menu shortcut (iOS 11-12)
+%hook SBUIAppIconForceTouchControllerDataProvider
 
-- (void)_presentAnimated:(BOOL)arg1 withCompletionHandler:(void (^)())arg2 {
-	SBUIIconForceTouchIconViewWrapperView *wrapperView = (SBUIIconForceTouchIconViewWrapperView *)[self valueForKey:@"_iconViewWrapperViewAbove"];
-	NSString *bundleID = [wrapperView.iconView.icon applicationBundleID];
-	if (enabled && forceTouch && bundleID && [wrapperView respondsToSelector:@selector(iconView)]) {
-		arg2();
-		[self dismissAnimated:YES withCompletionHandler:nil];
-		NSDictionary *info = @{@"id": bundleID};
-		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
-	} else {
-		%orig;
+- (NSArray *)applicationShortcutItems {
+	NSArray *orig = %orig;
+
+	if (enabled && forceTouch) {
+		SBSApplicationShortcutItem *muteOptionsShortcut = [[%c(SBSApplicationShortcutItem) alloc] init];
+
+		muteOptionsShortcut.localizedTitle = @"Mute Options";
+		muteOptionsShortcut.bundleIdentifierToLaunch = [self applicationBundleIdentifier];
+		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", bundleIdentifier];
+
+		return [orig arrayByAddingObject:muteOptionsShortcut];
 	}
+
+	return %orig;
 }
 
 %end
 
-// Add swipe up gesture
+%hook SBUIAppIconForceTouchController
+- (void)appIconForceTouchShortcutViewController:(id)arg1 activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item {
+	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
+		NSDictionary *info = @{@"id": item.bundleIdentifierToLaunch};
+		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+	}
+}
+%end
+
 %hook SBIconView
 %property (nonatomic, retain) UISwipeGestureRecognizer *swipeGesture;
 
+// Force touch menu shortcut (iOS 13+)
+- (NSArray *)applicationShortcutItems {
+	NSArray *orig = %orig;
+
+	if (enabled && forceTouch) {
+		SBSApplicationShortcutItem *muteOptionsShortcut = [[%c(SBSApplicationShortcutItem) alloc] init];
+
+		muteOptionsShortcut.localizedTitle = @"Mute Options";
+		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", bundleIdentifier];
+
+		return [orig arrayByAddingObject:muteOptionsShortcut];
+	}
+
+	return %orig;
+}
+
++ (void)activateShortcut:(SBSApplicationShortcutItem *)item withBundleIdentifier:(NSString*)bundleID forIconView:(id)iconView {
+	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
+		NSDictionary *info = @{@"id": bundleID};
+		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+	}
+}
+
+// Add swipe up gesture
 - (void)setLocation:(long long)arg1 {
 	%orig;
 	if (!self.swipeGesture) {
