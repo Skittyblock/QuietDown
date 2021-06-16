@@ -206,13 +206,19 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 %end
 
 // Mute Lock Screen notifications
-// Could also use NCNotificationCombinedListViewController, SBDashBoardCombinedListViewController, or SBDashBoardMainPageContentViewController. They all do the same thing.
 %hook SBDashBoardNotificationDispatcher
+// iOS 11-12
+- (void)postNotificationRequest:(NCNotificationRequest *)request forCoalescedNotification:(id)notification {
+	if (coverSheet && shouldStopRequest(request)) return;
+	%orig;
+}
 
-- (void)postNotificationRequest:(NCNotificationRequest *)request forCoalescedNotification:(id)arg2 {
-	if (coverSheet && shouldStopRequest(request)) {
-		return;
-	}
+%end
+
+%hook CSNotificationDispatcher
+// iOS 13+
+- (void)postNotificationRequest:(NCNotificationRequest *)request {
+	if (coverSheet && shouldStopRequest(request)) return;
 	%orig;
 }
 
@@ -221,20 +227,21 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 %hook SBNCScreenController
 
 - (void)turnOnScreenForNotificationRequest:(NCNotificationRequest *)request {
-	if (coverSheet && shouldStopRequest(request)) {
-		return;
-	}
+	if (coverSheet && shouldStopRequest(request)) return;
 	%orig;
 }
 
 %end
 
 %hook SBNCSoundController
-
+// iOS 11-12
 - (void)playSoundForNotificationRequest:(NCNotificationRequest *)request {
-	if (coverSheet && shouldStopRequest(request)) {
-		return;
-	}
+	if (coverSheet && shouldStopRequest(request) && [self _isDeviceUILocked]) return;
+	%orig;
+}
+// iOS 13+
+- (void)playSoundForNotificationRequest:(NCNotificationRequest *)request presentingDestination:(id)destination {
+	if (coverSheet && shouldStopRequest(request) && [self _isDeviceUILocked]) return;
 	%orig;
 }
 
@@ -242,11 +249,14 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 
 // Mute banner notifications
 %hook SBNotificationBannerDestination
-
-- (void)_postNotificationRequest:(NCNotificationRequest *)request forCoalescedNotification:(id)arg2 modal:(bool)arg3 sourceAction:(id)arg4 completion:(id)arg5 {
-	if (banners && shouldStopRequest(request)) {
-		return;
-	}
+// iOS 11-12
+- (void)_postNotificationRequest:(NCNotificationRequest *)request forCoalescedNotification:(id)notification modal:(bool)modal sourceAction:(id)sourceAction completion:(id)completion {
+	if (banners && shouldStopRequest(request)) return;
+	%orig;
+}
+// iOS 13+
+- (void)_postNotificationRequest:(NCNotificationRequest *)request modal:(BOOL)modal completion:(id)completion {
+	if (banners && shouldStopRequest(request)) return;
 	%orig;
 }
 

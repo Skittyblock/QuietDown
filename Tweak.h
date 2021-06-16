@@ -51,3 +51,7 @@
 @interface SBUIIconForceTouchViewController : UIViewController
 - (void)dismissAnimated:(bool)arg1 withCompletionHandler:(id)arg2;
 @end
+
+@interface SBNCSoundController : NSObject
+-(BOOL)_isDeviceUILocked;
+@end
