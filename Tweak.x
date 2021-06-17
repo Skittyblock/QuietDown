@@ -27,9 +27,7 @@ static void refreshPrefs() {
 	if (!settings) {
 		settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
 	}
-	if (!config) {
-		config = [NSMutableDictionary dictionaryWithContentsOfFile:configPath];
-	}
+	config = [NSMutableDictionary dictionaryWithContentsOfFile:configPath];
 
 	enabled = [([settings objectForKey:@"enabled"] ?: @(YES)) boolValue];
 	forceTouch = [([settings objectForKey:@"forceTouch"] ?: @(YES)) boolValue];
@@ -53,6 +51,8 @@ static void PreferencesChangedCallback(CFNotificationCenterRef center, void *obs
 
 // Return config dictionary with added (or removed) entry
 static void processEntry(NSString *bundleID, double interval) {
+	if (!config) config = [NSMutableDictionary dictionaryWithContentsOfFile:configPath];
+	if (!config[@"entries"]) config[@"entries"] = @[];
 	NSMutableArray *entries = [config[@"entries"] mutableCopy];
 	bool add = YES;
 	NSDictionary *remove = nil;
@@ -105,6 +105,21 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 	return stop;
 }
 
+static NSString *timeStringFromInterval(NSTimeInterval seconds) {
+	NSString *s = @"s";
+	if (seconds == 0) return @"";
+	if (floorf(seconds) == 1) s = @"";
+	if (seconds < 60) return [NSString stringWithFormat:@"%.ld second%@", (long)seconds, s];
+
+	long minutes = seconds / 60;
+	seconds -= minutes * 60;
+	if (minutes < 60)  return [NSString stringWithFormat:@"%ld:%02ld", minutes, (long)seconds];   
+
+	long hours = minutes / 60;
+	minutes -= hours * 60;
+	return [NSString stringWithFormat:@"%ld:%02ld:%02ld", hours, minutes, (long)seconds];   
+}
+
 %group Tweak
 // Add menu observer
 %hook SpringBoard
@@ -134,9 +149,13 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 	}]];
 
 	bool muted = NO;
+	NSTimeInterval mutedFor = 0;
 	for (NSDictionary *entry in (NSArray *)config[@"entries"]) {
 		if ([entry[@"id"] isEqualToString:bundleID]) {
-			if ([[NSDate date] timeIntervalSince1970] < [entry[@"timeStamp"] intValue] || [entry[@"timeStamp"] intValue] == -1) {
+			if ([[NSDate date] timeIntervalSince1970] < [entry[@"timeStamp"] intValue]) {
+				muted = YES;
+				mutedFor = [entry[@"timeStamp"] intValue] - [[NSDate date] timeIntervalSince1970];
+			} else if ([entry[@"timeStamp"] intValue] == -1) {
 				muted = YES;
 			}
 		}
@@ -145,6 +164,13 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 		[alert addAction:[UIAlertAction actionWithTitle:@"Unmute" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
 			processEntry(bundleID, 0);
 		}]];
+		if (mutedFor > 0) {
+			// NSDictionary *map = timeMapFromInterval(mutedFor);
+			NSString *timeLeftString = timeStringFromInterval(mutedFor);
+			alert.message = [NSString stringWithFormat:@"Currently muted for %@", timeLeftString];
+		} else {
+			alert.message = @"Currently muted indefinitely";
+		}
 	} else {
 		[alert addAction:[UIAlertAction actionWithTitle:@"Forever" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
 			processEntry(bundleID, -1);
@@ -183,6 +209,8 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
 		NSDictionary *info = @{@"id": item.bundleIdentifierToLaunch};
 		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+	} else {
+		%orig;
 	}
 }
 %end
@@ -210,6 +238,8 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
 		NSDictionary *info = @{@"id": bundleID};
 		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+	} else {
+		%orig;
 	}
 }
 
