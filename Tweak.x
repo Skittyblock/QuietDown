@@ -1,9 +1,10 @@
 // QuietDown, by Skitty
 // Mute notifications per app for periods of time
 
+#import <rootless.h>
 #import "Tweak.h"
 
-static NSString *bundleIdentifier = @"xyz.skitty.quietdown";
+#define BUNDLE_ID @"xyz.skitty.quietdown"
 
 static NSDictionary *settings;
 static bool enabled;
@@ -12,20 +13,20 @@ static bool swipeUp;
 static bool banners;
 static bool coverSheet;
 
-static NSString *configPath = @"/var/mobile/Library/QuietDown/config.plist";
+static NSString *configPath = ROOT_PATH_NS(@"/var/mobile/Library/QuietDown/config.plist");
 static NSMutableDictionary *config;
 
 // Preference Updates
 static void refreshPrefs() {
-	CFArrayRef keyList = CFPreferencesCopyKeyList((CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	CFArrayRef keyList = CFPreferencesCopyKeyList((CFStringRef)BUNDLE_ID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	if (keyList) {
-		settings = (NSMutableDictionary *)CFBridgingRelease(CFPreferencesCopyMultiple(keyList, (CFStringRef)bundleIdentifier, kCFPreferencesCurrentUser, kCFPreferencesAnyHost));
+		settings = (NSMutableDictionary *)CFBridgingRelease(CFPreferencesCopyMultiple(keyList, (CFStringRef)BUNDLE_ID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost));
 		CFRelease(keyList);
 	} else {
 		settings = nil;
 	}
 	if (!settings) {
-		settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Preferences/%@.plist", bundleIdentifier]];
+		settings = [[NSMutableDictionary alloc] initWithContentsOfFile:[NSString stringWithFormat:ROOT_PATH_NS(@"/var/mobile/Library/Preferences/%@.plist"), BUNDLE_ID]];
 	}
 	config = [NSMutableDictionary dictionaryWithContentsOfFile:configPath];
 
@@ -92,9 +93,10 @@ static bool shouldStopRequest(NCNotificationRequest *request) {
 	NSMutableArray *removeObjects = [[NSMutableArray alloc] init];
 	for (NSDictionary *entry in (NSArray *)config[@"entries"]) {
 		int interval = [[NSDate date] timeIntervalSince1970];
-		if ([request.sectionIdentifier isEqualToString:entry[@"id"]] && (interval < [entry[@"timeStamp"] intValue] || [entry[@"timeStamp"] intValue] == -1)) {
+		int timeStamp = [entry[@"timeStamp"] intValue];
+		if ([request.sectionIdentifier isEqualToString:entry[@"id"]] && (interval < timeStamp || timeStamp == -1)) {
 			stop = YES;
-		} else if (interval > [entry[@"timeStamp"] intValue] && [entry[@"timeStamp"] intValue] != -1) {
+		} else if (interval > timeStamp && timeStamp != -1) {
 			[removeObjects addObject:entry];
 		}
 	}
@@ -127,7 +129,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 - (void)applicationDidFinishLaunching:(id)application {
 	%orig;
 	config = [NSMutableDictionary dictionaryWithContentsOfFile:configPath];
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showMuteMenu:) name:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showMuteMenu:) name:[NSString stringWithFormat:@"%@.menu", BUNDLE_ID] object:nil];
 }
 
 %new
@@ -194,7 +196,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 
 		muteOptionsShortcut.localizedTitle = @"Mute Options";
 		muteOptionsShortcut.bundleIdentifierToLaunch = [self applicationBundleIdentifier];
-		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", bundleIdentifier];
+		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", BUNDLE_ID];
 
 		return [orig arrayByAddingObject:muteOptionsShortcut];
 	}
@@ -206,9 +208,9 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 
 %hook SBUIAppIconForceTouchController
 - (void)appIconForceTouchShortcutViewController:(id)arg1 activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item {
-	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
+	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", BUNDLE_ID]]) {
 		NSDictionary *info = @{@"id": item.bundleIdentifierToLaunch};
-		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", BUNDLE_ID] object:nil userInfo:info];
 	} else {
 		%orig;
 	}
@@ -226,7 +228,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 		SBSApplicationShortcutItem *muteOptionsShortcut = [[%c(SBSApplicationShortcutItem) alloc] init];
 
 		muteOptionsShortcut.localizedTitle = @"Mute Options";
-		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", bundleIdentifier];
+		muteOptionsShortcut.type = [NSString stringWithFormat:@"%@.shortcut", BUNDLE_ID];
 
 		return [orig arrayByAddingObject:muteOptionsShortcut];
 	}
@@ -234,10 +236,10 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 	return %orig;
 }
 
-+ (void)activateShortcut:(SBSApplicationShortcutItem *)item withBundleIdentifier:(NSString*)bundleID forIconView:(id)iconView {
-	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", bundleIdentifier]]) {
++ (void)activateShortcut:(SBSApplicationShortcutItem *)item withbundleIdentifier:(NSString*)bundleID forIconView:(id)iconView {
+	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", BUNDLE_ID]]) {
 		NSDictionary *info = @{@"id": bundleID};
-		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", BUNDLE_ID] object:nil userInfo:info];
 	} else {
 		%orig;
 	}
@@ -258,7 +260,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 	NSString *bundleID = [self.icon applicationBundleID];
 	if (bundleID && swipeUp) {
 		NSDictionary *info = @{@"id": bundleID};
-		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", bundleIdentifier] object:nil userInfo:info];
+		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", BUNDLE_ID] object:nil userInfo:info];
 	}
 }
 
@@ -324,7 +326,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 
 %ctor {
 	refreshPrefs();
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback) PreferencesChangedCallback, (CFStringRef)[NSString stringWithFormat:@"%@.prefschanged", bundleIdentifier], NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback) PreferencesChangedCallback, (CFStringRef)[NSString stringWithFormat:@"%@.prefschanged", BUNDLE_ID], NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
 
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
 	[attributes setObject:[NSNumber numberWithInt:501] forKey:NSFileOwnerAccountID];
