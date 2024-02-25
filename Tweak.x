@@ -56,28 +56,28 @@ static void processEntry(NSString *bundleID, double interval) {
 	if (!config[@"entries"]) config[@"entries"] = @[];
 	NSMutableArray *entries = [config[@"entries"] mutableCopy];
 	bool add = YES;
-	NSDictionary *remove = nil;
-	for (NSMutableDictionary *entry in entries) {
-		if ([entry[@"id"] isEqual:bundleID]) {
+	for (int i = 0; i < entries.count; i++) {
+		if ([entries[i][@"id"] isEqual:bundleID]) {
+			NSMutableDictionary *entry = [entries[i] mutableCopy];
 			if (interval < 0) {
 				entry[@"timeStamp"] = @(-1);
 			} else if (interval == 0) {
-				remove = entry;
+				[entries removeObjectAtIndex:i];
+				break;
 			} else {
 				entry[@"timeStamp"] = @([[NSDate date] timeIntervalSince1970] + interval);
 			}
 			add = NO;
+			[entries replaceObjectAtIndex:i withObject:entry];
+			break;
 		}
-	}
-	if (remove) {
-		[entries removeObject:remove];
 	}
 	if (add) {
 		NSDictionary *info;
 		if (interval < 0) {
 			info = @{@"id": bundleID, @"timeStamp":  @(-1)};
 		} else if (interval != 0) {
-			info = @{@"id": bundleID, @"timeStamp": @([[NSDate date] timeIntervalSince1970] + interval)}; // 1 minute test
+			info = @{@"id": bundleID, @"timeStamp": @([[NSDate date] timeIntervalSince1970] + interval)};
 		}
 		if (info) {
 			[entries addObject:info];
@@ -236,7 +236,7 @@ static NSString *timeStringFromInterval(NSTimeInterval seconds) {
 	return %orig;
 }
 
-+ (void)activateShortcut:(SBSApplicationShortcutItem *)item withbundleIdentifier:(NSString*)bundleID forIconView:(id)iconView {
++ (void)activateShortcut:(SBSApplicationShortcutItem *)item withBundleIdentifier:(NSString*)bundleID forIconView:(id)iconView {
 	if ([[item type] isEqualToString:[NSString stringWithFormat:@"%@.shortcut", BUNDLE_ID]]) {
 		NSDictionary *info = @{@"id": bundleID};
 		[[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"%@.menu", BUNDLE_ID] object:nil userInfo:info];

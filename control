@@ -1,7 +1,7 @@
 Package: xyz.skitty.quietdown
 Name: QuietDown
 Depends: mobilesubstrate, firmware (>= 11.0)
-Version: 1.1.1
+Version: 1.1.2
 Architecture: iphoneos-arm
 Description: Mute Notifications for Time Periods
 Icon: https://skitty.xyz/repo/icons/xyz.skitty.quietdown.png
